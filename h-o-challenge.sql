@@ -1,13 +1,16 @@
 -- SRP Call Log Challenge SQL Script
 -- This script contains all SQL statements required to complete the challenge
 
--- 1. Create schema HOME_SERVICE_CALL_LOGS in CITIBIKE database (using CITIBIKE due to permissions)
-USE DATABASE CITIBIKE;
+-- 1. Create schema HOME_SERVICE_CALL_LOGS in DEMO_DB database
+USE DATABASE DEMO_DB;
 CREATE SCHEMA IF NOT EXISTS HOME_SERVICE_CALL_LOGS;
 USE SCHEMA HOME_SERVICE_CALL_LOGS;
 
 -- 2. Create internal stage LOGS_STAGE
 CREATE OR REPLACE STAGE LOGS_STAGE;
+
+-- NOTE: To upload JSON files to this stage, run the upload_files.sh script
+-- This script contains the snow stage copy command to upload all files from home_service_inbound/
 
 -- 3. Create JSON file format for parsing
 CREATE OR REPLACE FILE FORMAT JSON_FORMAT TYPE = 'JSON';
