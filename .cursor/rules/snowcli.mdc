@@ -1,0 +1,36 @@
+---
+description: Rules for using the Snowflake CLI
+globs:
+alwaysApply: true
+---
+
+# Rules for Using the Snowflake CLI
+
+This document outlines the standard procedures for running commands and deploying objects to Snowflake. These rules should be followed for all related tasks.
+
+## General Rules & Assumptions
+
+-   **Always use the Snowflake CLI** to run statements on Snowflake.
+-   Assume the **Snowflake CLI** (`snow`) is already installed and configured.
+-   The default connection is named **`cursor-pat`** and uses a Programmatic Access Token. **You can omit the connection name** in commands unless a different one is explicitly specified.
+-   The primary CLI configuration is located at `~/.snowflake/config.toml`.
+-   Named connections are defined in `~/.snowflake/connections.toml`.
+-   If a connection name is given, assume it is correctly configured in `connections.toml`. There is no need to ask for account details, credentials, or private key paths.
+-   The Snowflake CLI command line reference is documented in docs/snowcli-command-reference.md so if you need additional context on the `snow` command parameters you should be able to find them there.
+---
+
+## Common CLI Commands
+
+-   The main command is **`snow`**.
+
+-   **Test a connection:**
+    `snow connection test`
+    *(This will use the default `pat` connection. If another connection is specified, use `-c <connection_name>`)*
+
+-   **Run a single SQL statement:**
+    `snow sql -q "<query_text>"`
+    *(Example: `snow sql -q "SELECT * FROM my_table LIMIT 10;"`)*
+
+-   **Run a SQL file:**
+    `snow sql -f <filename>`
+    *(Example: `snow sql -f ./scripts/my_script.sql`)*

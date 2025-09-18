@@ -1,0 +1,14 @@
+---
+description: Rules when running statement in Snowflake or when creating objects in Snowflake
+globs: *.sql
+alwaysApply: true
+---
+
+#  when running statement in Snowflake or when creating objects in Snowflake
+
+- If the prompt specifies a database and schema **always** try to use those and don't decide to use another database and schema to complete the tasks.
+- If you get permission related error messages when running statements against the specified database and schema, try the following:
+    - Check if you have connected with the `accountadmin` role. If not, assume that role by issuing this command: `use role accountadmin`.
+    - Connect to Snowflake and verify which role owns the database and schema.
+    - Issue a `use role <owner>` statement to assume the role of the database and schema owner by replacing `<owner>` with the proper owner role name.
+    - 

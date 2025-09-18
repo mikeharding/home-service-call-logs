@@ -1,0 +1,105 @@
+---
+description: Instructions on how to build and deploy Streamlit in Snowflake (SiS) apps.
+alwaysApply: false
+---
+# Instructions for Cursor AI on how to build and deploy Streamlit in Snowflake (SiS) apps.
+
+This document should be used when developing a Streamlit in Snowflake application.  Unless explicitely told, when requesting assistance with buiding Streamlit apps the request should be considered to be a Streamlit in Snowflake applications. If a Streamlit standalone, local, open source, self-hosted application is mentionned then we will assume that the Steamlit app will run locally with a virtual environment managed with uv.  Use instructions in uv.mdc to get more context around how to use uv to manage python modules. 
+
+# Rules
+ 
+## Creating a Streamlit app
+
+- Check if the user has executed the `snow init` command by looking for the files and directories created by that command.  If the command was ran don't run it again, or create the files youself, and inform the user.
+
+- If the files are not available in the project you should create the files and populate them with the appropriate default values and put in the appropriate names for application, warehouse, and stage.
+
+- The files created by the `snow init` command are listed in the example below. You can omit running the command and create these files yourself.
+
+<example>
+example_streamlit/            - project name (default: example_streamlit)
+  snowflake.yml               - configuration for snow streamlit commands
+  environment.yml             - additional config for Streamlit, for example installing packages
+  streamlit_app.py            - entrypoint file of the app
+  pages/                      - directory name for Streamlit pages (default pages)
+  common/                     - example “shared library”
+</example>
+
+
+The values for `query_warehouse` and `stage` should be provided by the user or you should prompt for those values if they are not provided.  By default create a stage called streamlit_<app_name> and use the warehouse named `xsmall_wh`.
+
+
+## Create the project definition for a Streamlit app
+
+Each Streamlit app in Snowflake must include a snowflake.yml project definition file. Streamlit is limited to one application per project definition file.
+
+The following shows a sample `snowflake.yml` project definition file:
+
+<example>
+definition_version: 2
+entities:
+  my_streamlit:
+    type: streamlit
+    identifier: streamlit_app
+    title: My Streamlit App
+    description: This is a streamlit app example description.
+    stage: my_streamlit_stage
+    query_warehouse: xsmall_wh
+    main_file: streamlit_app.py
+    pages_dir: pages/
+    external_access_integrations:
+      - test_egress
+    secrets:
+      dummy_secret: "db.schema.dummy_secret"
+    imports:
+      - "@my_stage/foo.py"
+    artifacts:
+      - common/hello.py
+      - environment.yml
+</example>
+
+- If the Streamlit in Snowflake aplication, omit creating dummy pages if they are not of use.
+- Always name the main file `main_file: streamlit_app.py`.
+
+## Configurating the Snowflake Connection
+
+- When writing a Streamlit in Snowflake (SiS) application, **never** create a new Snowflake connection using `st.connection()` with explicit credentials (like user, password, account, etc.).
+
+- Instead, always acquire the existing, authenticated Snowflake session by performing the following instructions:
+    - Import streamlit by inserting this Python statement: `import streamlit as st `.
+    - Import the following from Snowpark: `from snowflake.snowpark.context import get_active_session`.
+    - Create a session object:  `session = get_active_session()`.
+
+- This `session` object is a standard Snowpark Python session and can be used to run queries and retrieve data into a Pandas dataframe for use with Streamlit: 
+      (e.g., `sql_data = session.sql('SELECT * FROM my_table').to_pandas()`).
+
+
+## Deploy the Streamlit in Snowflake app
+
+- Before deploying the streamlit app, make sure that by default it will use the warehouse named `xsmall_wh`.
+- You should validate that the tables being queries actually have the columns referenced in the code.
+- Remove any sample pages that are created with the `snow streamlit init` command.
+
+- To deploy the Streamlit application to Snowflake, use the **Snowflake CLI**. The standard command is
+      `snow streamlit deploy`.
+
+      For example:
+      `snow streamlit deploy --app-name my_snowflake_app --file app.py`
+
+      The application files should always be developed and saved locally, with deployment handled by this command.
+      Do not suggest alternative deployment methods like manual uploads through the Snowsight UI.
+    
+- The `snow streamlit deploy` command uploads local files to a stage and creates a new Streamlit object inside your chosen database and schema. Your project definition file should specify the main Python file and query warehouse. You can also specify the following options:
+
+    `--replace`: Replaces the specified Streamlit app, if it already exists.
+    `--open`: Opens the Streamlit app in your default browser after deploying the app.
+    `--prune`: Removes files that exist in the stage, but not files in the local filesystem (by default no files are removed).
+
+- By default the command automatically deploys the environment.yml file and the content of the pages/ directory, if any of those exists. You can use different files by using command line options.
+
+For more information about creating Streamlit apps, see the CLI snow streamlit deploy and SQL CREATE STREAMLIT commands.
+ 
+- Ensure that all imported Python libraries are available within the Snowflake Anaconda channel, as
+Streamlit in Snowflake apps can only use packages from that channel. If a less common library is needed, advise the user to first verify its availability in Snowflake's documentation.
+    
+- The main application file should be a single Python script, typically named `app.py` or `streamlit_app.py`, located in the root of the project directory.

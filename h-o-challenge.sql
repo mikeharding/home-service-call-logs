@@ -39,3 +39,6 @@ FROM (
 )
 FILE_FORMAT = (TYPE = 'JSON')
 PATTERN = '.*_transcript\.json';
+
+-- 8. Check the data
+select * from call_logs limit 10;
